@@ -302,36 +302,12 @@ dev.off()
 
 
 
-#Changes in friendship by gender pairing
-gender2 <- as.factor(sapply(data_list$gender, function(i) 
-   if(i == 0) {"Female/Female Pairs"} 
-   else if(i == 1) {"Male/Female Pairs"} 
-   else {"Male/Male Pairs"}))
-
-max_changes <- data.frame(gender = gender2, value = sapply(1:(data_list$D),  
-                function(i) max(estd_ships[i,], na.rm = TRUE) -
-                   min(estd_ships[i,], na.rm = TRUE)))
-
-p <- ggplot(max_changes, aes(x = value, fill = gender)) +
-      scale_fill_manual(values = gender.cols) +
-      geom_histogram(aes(y = ..density..), bins = 20) +
-      xlab("Max. Change in Friendship Probability") +
-      ylab("Density") +
-      facet_wrap(~ gender) +
-      theme(legend.position="none")
-
-pdf("figures/changes_in_gender.pdf",9,3)
-p
-dev.off()
-
-
-
 
 
 #Sexual Selection - Tail Streamer Length in Males
 #################################################
-pdf("figures/tail_streamers.pdf",5,3)
-par(mar = c(0,0,1,0), mfrow = c(1,1))
+pdf("figures/tail_streamers.pdf",7,3)
+par(mar = c(0,0,1,4), mfrow = c(1,1))
 m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
 colnames(m) <- tag_ids
 rownames(m) <- tag_ids
@@ -351,8 +327,12 @@ for(s in which(covariates$Sex == "M")) {
 }
 V(net)$label.color = "black"
 V(net)$label.color[is.na(covariates$MeanTS)] = rgb(1,1,1)
-plot.igraph(net,vertex.label=V(net)$name,layout=circ_layout,
+plot.igraph(net,vertex.label=V(net)$name,layout=circ_layout, edge.color = "grey",
             edge.width=E(net)$weight*5, main = "", vertex.size = 30)
+legend("right",inset = 0, title = "Estimated\nProbability\nof a Relation",
+       legend = c("0.25","0.5","0.75","1.0"), 
+       col="grey", lwd=5*c(0.25,0.5,0.75,1), 
+       cex=1, horiz = FALSE, bty = "n")
 dev.off()
 
 
@@ -373,9 +353,10 @@ m[m < 0.8] <- 0
 net <- graph.adjacency(m[covariates$Sex == "M",covariates$Sex == "M"],
                         mode = "undirected", weighted = TRUE, diag = FALSE)
 V(net)$color = rgb(0,0,1,0.4)
-v(net)$label.color = "black"
-set.seed(1)
+V(net)$label.color = "black"
+set.seed(2)
 layout <- layout.fruchterman.reingold(net)
+layout[4,] = layout[4,] - c(4,4)
 plot.igraph(net,vertex.label=V(net)$name,layout=layout,
             edge.width=E(net)$weight*5, main = "", vertex.size = 20)
 dev.off()
