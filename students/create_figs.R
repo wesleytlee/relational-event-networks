@@ -1,4 +1,4 @@
-# 1. Create assorted figures and animations for swallow data
+# 1. Create assorted figures and animations for MIT Social Evolution data
 
 
 
@@ -8,6 +8,7 @@
 
 library(RColorBrewer)
 library(ggplot2)
+library(grid)
 library(gridExtra)
 library(rstan)
 library(igraph)
@@ -67,9 +68,10 @@ p2 <- ggplot(NULL, aes(weekly, fill = during_night)) +
    scale_x_continuous(breaks = seq(0,336,24*2), 
       labels = c("Su","M","T","W","Th","F","Sa","Su"), name = "Time")
 p3 <- ggplot(NULL, aes(data_list$N[data_list$N != 0])) +
-   geom_histogram(binwidth = 10) +
+   geom_histogram() +
+   scale_x_sqrt(expand=c(0,0), breaks = c(1,5,20,50,100,200,400,600)) + 
    ggtitle("Interaction Counts Per Dyad") +
-   annotate("text", x = 350, y = 140, size = 4,
+   annotate("text", x = 200, y = 88, size = 4,
             label = "Non-zero counts only\n 45% of dyads do not interact") +
    ylab("Number of Dyads") +
    xlab("Interaction Counts")
@@ -108,8 +110,7 @@ wv4 <- predict(smooth.spline(
 labels = c("Non-friends / Different Floors","Friends / Different Floors",
            "Non-friends / Same Floor","Friends / Same Floor")
 weekly_patterns <- data.frame(x = rep(1:336,4), ints = c(wv,wv2,wv3,wv4), 
-                     factor = factor(sapply(labels, function(i) rep(i,336)),
-                                        levels = labels))
+   factor = factor(sapply(labels, function(i) rep(i,336)), levels = labels))
 
 
 factor.cols <- brewer.pal(4, "Paired")
@@ -117,19 +118,19 @@ factor.cols <- brewer.pal(4, "Paired")
 rect <- data.frame(xmin=8*2+seq(0,335,24*2), xmax=17*2+seq(0,335,24*2),
                    ymin=rep(-Inf,7), ymax=rep(Inf,7))
 
-p0 <- ggplot(weekly_patterns, aes(x,ints, colour = factor, linetype = factor)) +
-   geom_line(size = 1.5) +
-   scale_linetype_manual(values = c("solid","dashed","solid","dashed")) +
+p0 <- ggplot(weekly_patterns, aes(x,ints, colour = factor)) +
+   geom_line(aes(size = factor)) +
+   scale_size_manual(values = c(1, 1, 1.5, 1.5)) +
    scale_colour_manual(values = factor.cols[c(2,1,4,3)]) +
-   guides(linetype=guide_legend(title = "Legend",keywidth = 2, keyheight = 1),
+   guides(size=guide_legend(title = "Legend",keywidth = 2, keyheight = 1),
           colour=guide_legend(title = "Legend"))
 p1 <- ggplot(weekly_patterns[c(1:336,336+1:336),], 
-             aes(x,ints,group = factor,colour = factor, linetype = factor)) +
-   geom_line(size = 1.5, alpha=0.8) +
+             aes(x,ints,group = factor,colour = factor)) +
+   geom_line(aes(size = factor), alpha=0.8) +
    ylab("Normalized Intensity") +
    scale_x_continuous(breaks = seq(0,336,24*2), 
       labels = c("Su","M","T","W","Th","F","Sa","Su"), name = "") +
-   scale_linetype_manual(values = c("solid","dashed")) +
+   scale_size_manual(values = c(1, 1)) +
    scale_colour_manual(values = factor.cols[c(2,1)]) +
    ylim(0,17.5) +
    theme_bw() +
@@ -137,12 +138,12 @@ p1 <- ggplot(weekly_patterns[c(1:336,336+1:336),],
                color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE)
 
 p2 <- ggplot(weekly_patterns[c(336*2+1:336,336*3+1:336),], 
-             aes(x,ints,group = factor, colour = factor, linetype = factor)) +
-   geom_line(size = 1.5, alpha=0.8) +
+             aes(x,ints,group = factor, colour = factor)) +
+   geom_line(aes(size = factor), alpha=0.8) +
    ylab("Normalized Intensity") +
+   scale_size_manual(values = c(1.5, 1.5)) +
    scale_x_continuous(breaks = seq(0,336,24*2), 
       labels = c("Su","M","T","W","Th","F","Sa","Su"), name = "") +
-   scale_linetype_manual(values = c("solid","dashed")) +
    scale_colour_manual(values = factor.cols[c(4,3)]) +
    ylim(0,17.5) +
    theme_bw() +
@@ -150,10 +151,11 @@ p2 <- ggplot(weekly_patterns[c(336*2+1:336,336*3+1:336),],
              color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE)
 p3 <- ggplot(weekly_patterns[c(1:336,336*2+1:336),], 
              aes(x,ints,group = factor, colour = factor)) +
-   geom_line(size = 1.5, alpha=0.8) +
+   geom_line(aes(size = factor), alpha=0.8) +
    ylab("Normalized Intensity") +
    scale_x_continuous(breaks = seq(0,336,24*2), 
       labels = c("Su","M","T","W","Th","F","Sa","Su"), name = "") +
+   scale_size_manual(values = c(1, 1.5))   +
    scale_colour_manual(values = factor.cols[c(2,4)]) +
    ylim(0,17.5) +
    theme_bw() +
