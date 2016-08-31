@@ -53,7 +53,7 @@ gender.cols <- brewer.pal(3, "Set1")[c(1,3,2)]
 p1 <- ggplot(NULL, aes(data_list$N, fill = gender)) +
    geom_histogram(binwidth = 2) +
    scale_fill_manual(values = gender.cols, 
-                     guide = guide_legend(title = "Gender Pairing")) +
+                     guide = guide_legend(title = "Sex Pairing")) +
    ggtitle("Interaction Counts Per Dyad") +
    ylab("Number of Dyads") +
    xlab("Interaction Counts")
@@ -88,7 +88,8 @@ all_gender <- as.factor(unlist(sapply(1:data_list$D, function(i)
 all_dyads <- as.factor(unlist(sapply(1:data_list$D, function(i) 
                                  rep(i,data_list$N[i]))))
 n_dyads_active <- rowSums(sapply(1:data_list$D, function(i) 
-   p_time(active_mat[all_dyads[i],1],active_mat[all_dyads[i],2])))/3
+   p_time(data_list$active_times[all_dyads[i],1],
+          data_list$active_times[all_dyads[i],2])))/3
 all_weights <- sapply(1:length(all_times), function(i) 
                         n_dyads_active[period(all_times[i])])
 all_times <- sapply(floor(all_times), function(i) map_times(i,2))
@@ -96,7 +97,7 @@ all_times <- sapply(floor(all_times), function(i) map_times(i,2))
 p2 <- ggplot(NULL, aes(all_times, fill = all_gender)) +
          geom_histogram(aes(weight = 1/all_weights), binwidth = 1) +
          scale_fill_manual(values = gender.cols, 
-            guide = guide_legend(title = "Gender Pairing")) +
+            guide = guide_legend(title = "Sex Pairing")) +
          ggtitle("Interactions Over Time") +
          ylab("Avg. Interactions Per Dyad") +
          scale_x_continuous(breaks = seq(5,35,10), 
@@ -270,7 +271,7 @@ p1 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "FF"),],
              aes(x=time,y=probs,group=dyads)) +
    geom_line(colour = gender.cols[1],size = 1, alpha = 0.25) +
    ggtitle("Female/Female Pairs") +
-   ylab("Probability of Friendship") +
+   ylab("Probability of a Social Relation") +
    xlab("Time") +
    xlim(17,105) +
    ylim(0,1) +
@@ -281,7 +282,7 @@ p2 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "MF"),],
              aes(x=time,y=probs,group=dyads)) +
    geom_line(colour = gender.cols[2],size = 1, alpha = 0.25) +
    ggtitle("Male/Female Pairs") +
-   ylab("Probability of Friendship") +
+   ylab("Probability of a Social Relation") +
    xlab("Time") +
    xlim(17,105) +
    ylim(0,1) +
@@ -292,14 +293,14 @@ p3 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "MM"),],
              aes(x=time,y=probs,group=dyads)) +
    geom_line(colour = gender.cols[3],size = 1, alpha = 0.25) +
    ggtitle("Male/Male Pairs") +
-   ylab("Probability of Friendship") +
+   ylab("Probability of a Social Relation") +
    xlab("Time") +
    xlim(17,105) +
    ylim(0,1) +
    theme(legend.position="none") +
    scale_x_datetime()
 
-pdf("figures/paths_by_gender.pdf",9,3)
+pdf("figures/paths_by_sex.pdf",9,3)
 grid.arrange(p1,p2,p3,nrow = 1)
 dev.off()
 
