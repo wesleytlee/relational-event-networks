@@ -114,13 +114,13 @@ dev.off()
 #Trace plots
 ############
 
-p1 <- ggplot(NULL, aes(x=1:18000, y=est_params$c[,2])) + geom_line() +
+p1 <- ggplot(NULL, aes(x=1:9000, y=est_params$c[,2])) + geom_line() +
   xlab("Iterations") + ylab(expression(c[MF]))
-p2 <- ggplot(NULL, aes(x=1:18000, y=est_params$k[,1])) + geom_line() +
+p2 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,1])) + geom_line() +
   xlab("Iterations") + ylab(expression(k[1]))
-p3 <- ggplot(NULL, aes(x=1:18000, y=est_params$sparsity)) + geom_line() +
+p3 <- ggplot(NULL, aes(x=1:9000, y=est_params$sparsity)) + geom_line() +
   xlab("Iterations") + ylab(expression(s))
-p4 <- ggplot(NULL, aes(x=1:18000, y=est_params$t_prob)) + geom_line() +
+p4 <- ggplot(NULL, aes(x=1:9000, y=est_params$t_prob)) + geom_line() +
   xlab("Iterations") + ylab(expression(q))
 
 pdf("figures/swallow_trace.pdf",6,3)
@@ -154,8 +154,10 @@ m <- m + t(m)
 m[m < 0.1] <- 0
 net <- graph.adjacency(m,mode = "undirected", weighted = TRUE, diag = FALSE)
 
-set.seed(4)
+set.seed(3)
 fr_layout = layout.fruchterman.reingold(net)
+fr_layout[17,] = fr_layout[17,] + c(0,0.5)
+
 
 
 
@@ -183,15 +185,16 @@ nodes.cols = gsub("M",rgb(0,0,1,0.4),nodes.cols)
 pdf("figures/daily_snapshots.pdf",8,2)
 par(mar = c(0,0.5,1,0.5), mfrow = c(1,5))
 for(day in 1:5) {
-   m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
-   m[lower.tri(m, diag = FALSE)] <- int_counts_by_day[,day]
-   m <- m + t(m)
-   net <- graph.adjacency(m,mode = "undirected", weighted = TRUE, diag = FALSE)
-   V(net)$color = nodes.cols
-   V(net)$color[sapply(active_periods, function(x) days(x[1])) > day |
-                   sapply(active_periods, function(x) days(x[2])) < day] = rgb(1,1,1,0.4)
-   plot.igraph(net,vertex.label="",layout=circ_layout,edge.width=E(net)$weight/3, 
-               main = day_names[day], vertex.size = 20)
+    m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
+    m[lower.tri(m, diag = FALSE)] <- int_counts_by_day[,day]
+    m <- m + t(m)
+    net <- graph.adjacency(m,mode = "undirected", weighted = TRUE, diag = FALSE)
+    V(net)$color = nodes.cols
+    V(net)$color[sapply(active_periods, function(x) days(x[1])) > day |
+    sapply(active_periods, function(x) days(x[2])) < day] = rgb(1,1,1,0.4)
+    plot.igraph(net,vertex.label="",
+                layout=circ_layout,edge.width=E(net)$weight/3, 
+                main = day_names[day], vertex.size = 20)
 }
 dev.off()
 
@@ -306,8 +309,11 @@ dev.off()
 
 #Sexual Selection - Tail Streamer Length in Males
 #################################################
-pdf("figures/tail_streamers.pdf",7,3)
-par(mar = c(0,0,1,4), mfrow = c(1,1))
+pdf("figures/sexual_selection.pdf",8,3)
+
+m <- matrix(c(1,2,3),nrow = 1,ncol = 3)
+layout(mat = m,widths = c(0.45,0.45,0.1))
+
 m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
 colnames(m) <- tag_ids
 rownames(m) <- tag_ids
@@ -318,6 +324,8 @@ net <- graph.adjacency(m,mode = "undirected", weighted = TRUE, diag = FALSE)
 V(net)$sex = covariates$Sex
 V(net)$color = V(net)$sex
 V(net)$color = gsub("F",rgb(1,0,0,0.4),V(net)$color)
+
+#Tail streamer length
 for(s in which(covariates$Sex == "M")) {
    if(is.na(covariates$MeanTS[s])) {
       V(net)$color[s] = rgb(0,0,0,1)
@@ -327,9 +335,23 @@ for(s in which(covariates$Sex == "M")) {
 }
 V(net)$label.color = "black"
 V(net)$label.color[is.na(covariates$MeanTS)] = rgb(1,1,1)
-plot.igraph(net,vertex.label=V(net)$name,layout=circ_layout, edge.color = "grey",
-            edge.width=E(net)$weight*5, main = "", vertex.size = 30)
-legend("right",inset = 0, title = "Estimated\nProbability\nof a Relation",
+par(mar = c(0,0,1,0))
+plot.igraph(net,vertex.label=V(net)$name,layout=circ_layout, 
+            edge.color = "grey", edge.width=E(net)$weight*5, 
+            main = "Tail Streamer Length", vertex.size = 30)
+
+#Ventral plumage coloration
+for(s in which(covariates$Sex == "M")) {
+  V(net)$color[s] = rgb(0,0,1,(-covariates$Color[s]+2)/7)   
+}
+V(net)$label.color = "black"
+par(mar = c(0,0,1,0))
+plot.igraph(net,vertex.label=V(net)$name,layout=circ_layout, 
+            edge.color = "grey", edge.width=E(net)$weight*5, 
+            main = "Ventral Plumage Coloration", vertex.size = 30)
+
+plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+legend(x="center",inset = 0, title = "Estimated\nProbability\nof a Relation",
        legend = c("0.25","0.5","0.75","1.0"), 
        col="grey", lwd=5*c(0.25,0.5,0.75,1), 
        cex=1, horiz = FALSE, bty = "n")
@@ -420,7 +442,7 @@ alpha.vec.length <- length(alpha.vec.default)
 
 #Modifed function to estimate network at times (taking into account rounding)
 ship_snap <- function(i, t) {
-   time_snap = possible.dates[t]
+   time_snap = possible.times[t]
    if(length(times[[i]]) == 0) {
       0
    } else if (max(active_m5[tag_ids %in% indices[i,],1]) > possible_m5[t] | 
@@ -437,20 +459,22 @@ ship_snap <- function(i, t) {
       w2/(w1+w2)*sample_ships[i,index] + w1/(w1+w2)*sample_ships[i,index+1]
    }
 }
-snapshots <- sapply(1:num.time.steps, function(i) sapply(1:(data_list$D), ship_snap, t=i))
+snapshots <- sapply(1:num.time.steps, function(i) 
+                    sapply(1:(data_list$D), ship_snap, t=i))
 
 #Fade connections as nodes de-activate
 for(i in 1:(data_list$D)) {
    last_index = min(active_m5[tag_ids %in% indices[i,],2])
    if(last_index <= max(possible_m5)) {
-      fade_len = 1:(min(last_index+look.back.default,max(possible_m5))-last_index)
+      fade_len = 1:(min(last_index+look.back.default,
+                        max(possible_m5))-last_index)
       snapshots[i,fade_len+last_index] = (1-fade_len/look.back.default)*
          snapshots[i,last_index]
    }
 }  
 
 m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
-net_inferred <- graph.adjacency(m,mode = "undirected", weighted = TRUE, diag = FALSE)
+net_inferred <- graph.adjacency(m,mode = "undirected", weighted = TRUE)
 V(net_inferred)$color <- nodes.cols
 V(net_inferred)$label.color <- "black"
 V(net_inferred)$red = gsub("M",0,gsub("F",1,covariates$Sex))
@@ -523,7 +547,7 @@ for(i in 1:num.time.steps) {
    par(mfrow = c(1,2), mar = c(1,3,2,3), oma = c(1,0,0,0))
    plot.igraph(net_raw,layout=fr_layout, edge.curved = 0, edge.width = 2, 
                main = "Encounters")
-   mtext(strftime(possible.dates[i]), side = 1, adj = 1.4, cex = 1.2)
+   mtext(strftime(possible.times[i]), side = 1, adj = 1.4, cex = 1.2)
    plot.igraph(net_inferred,layout=fr_layout, edge.curved = 0, edge.width = 2, 
                main = "Inferred Network")
    dev.off()
@@ -531,4 +555,4 @@ for(i in 1:num.time.steps) {
 
 #Transform sequence of .png into .avi
 #Requires ffmpeg, which can be found here: https://ffmpeg.org/
-#ffmpeg -framerate 10 -i NetAnimation%03d.png -c:v libx264 -r 60 -pix_fmt yuv420p network_movie.avi
+#ffmpeg -framerate 10 -i NetAnimation%03d.png -c:v libx264 -r 60 -pix_fmt yuv420p barn_swallow_network.mp4

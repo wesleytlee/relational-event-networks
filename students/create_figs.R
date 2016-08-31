@@ -32,22 +32,22 @@ as.time = function(t) as.POSIXct(t, origin = "1970-01-01")
 
 #Multi-plot function adapted from https://stackoverflow.com/questions/30611474/
 grid_arrange_shared_legend <- function(...) {
-   plots <- list(...)
-   g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
-   legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
-   lheight <- sum(legend$height)
-   p <- grid.arrange(
-      arrangeGrob(plots[[2]] + theme(legend.position="none"),
-                  plots[[3]] + theme(legend.position="none"),
-                  plots[[4]] + theme(legend.position="none"),nrow = 1),
-      legend,
-      nrow = 2,
-      heights = unit.c(unit(1, "npc") - lheight, lheight))
-   return(p)
+  plots <- list(...)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  p <- grid.arrange(
+    do.call(arrangeGrob, c(lapply(2:length(plots), function(x)
+      plots[[x]] + theme(legend.position="none")),list(nrow = 1))),
+    legend,
+    nrow = 2,
+    heights = unit.c(unit(1, "npc") - lheight, lheight))
+  return(p)
 }
 
 #Basic descriptives of proximity interaction data
 during_night <- !(weekly %% 48 >= 8*2 & weekly %% 48 < 17*2)
+months <- as.POSIXlt(unlist(proximity2), origin = "1970-01-01")$mon
 
 p1 <- ggplot(NULL, aes(as.time(unlist(proximity2)), fill = during_night)) +
    geom_histogram(bins = 60) +
@@ -61,20 +61,19 @@ p1 <- ggplot(NULL, aes(as.time(unlist(proximity2)), fill = during_night)) +
          "2009-01-01","2009-02-01", "2009-03-01","2009-04-01","2009-05-01",
          "2009-06-01"), tz = "GMT"), 
       labels = c("","Oct","","","Jan","","","Apr","",""))
-p2 <- ggplot(NULL, aes(weekly, fill = during_night)) +
-   geom_histogram(bins = 336) +
-   ggtitle("Weekly Periodicity") +
+p2 <- ggplot(NULL, aes(weekly[months >= 9], fill = during_night[months >= 9])) +
+   geom_histogram(bins = 336/2) +
+   ggtitle("Weekly Periodicity (Oct to Dec)") +
    ylab("Number of Interactions") +
-   scale_x_continuous(breaks = seq(0,336,24*2), 
-      labels = c("Su","M","T","W","Th","F","Sa","Su"), name = "Time")
-p3 <- ggplot(NULL, aes(data_list$N[data_list$N != 0])) +
-   geom_histogram() +
-   scale_x_sqrt(expand=c(0,0), breaks = c(1,5,20,50,100,200,400,600)) + 
-   ggtitle("Interaction Counts Per Dyad") +
-   annotate("text", x = 200, y = 88, size = 4,
-            label = "Non-zero counts only\n 45% of dyads do not interact") +
-   ylab("Number of Dyads") +
-   xlab("Interaction Counts")
+   scale_x_continuous(breaks = seq(0,336,24*2), name = "Time",
+      labels = c("Su","M","T","W","Th","F","Sa","Su"))
+p3 <- ggplot(NULL, aes(weekly[months %in% c(3,4)], 
+                       fill = during_night[months %in% c(3,4)])) +
+  geom_histogram(bins = 336/2) +
+  ggtitle("Weekly Periodicity (Apr to May)") +
+  ylab("Number of Interactions") +
+  scale_x_continuous(breaks = seq(0,336,24*2), name = "Time",
+                     labels = c("Su","M","T","W","Th","F","Sa","Su"))
 p <- grid_arrange_shared_legend(p1, p1, p2, p3)
 pdf("figures/descriptive_mit.pdf",9,3)
 plot(p)
@@ -166,6 +165,148 @@ p <- grid_arrange_shared_legend(p0,p1,p2,p3)
 pdf("figures/mit_weekly.pdf",9,3)
 plot(p)
 dev.off()
+
+
+
+
+
+#Estimating CTMC parameters from survey data
+#Estimate proportion of connected dyads
+estd_sparsity <- rbind(rowMeans(sapply(reported_net, identity)
+                                [,data_list$same_floor & data_list$same_year]),
+                  rowMeans(sapply(reported_net, identity)
+                           [,data_list$same_floor & !data_list$same_year]),
+                  rowMeans(sapply(reported_net, identity)
+                           [,!data_list$same_floor & data_list$same_year]),
+                  rowMeans(sapply(reported_net, identity)
+                           [,!data_list$same_floor & !data_list$same_year]))
+s_hat <- rowMeans(estd_sparsity)
+
+prop_changed <- function(x) {
+  x_len = length(x)
+  abs(x[2:x_len] - x[2:x_len-1])
+}
+
+#Estimate probability of changes
+prop_changes <- rbind(rowMeans(sapply(reported_net, prop_changed)
+                               [,data_list$same_floor & data_list$same_year]),
+                      rowMeans(sapply(reported_net, prop_changed)
+                               [,data_list$same_floor & !data_list$same_year]),
+                      rowMeans(sapply(reported_net, prop_changed)
+                               [,!data_list$same_floor & data_list$same_year]),
+                      rowMeans(sapply(reported_net, prop_changed)
+                               [,!data_list$same_floor & !data_list$same_year]))
+
+survey_difft <- diff(as.numeric(difftime(survey_dates[1:5],start,unit="hours")))
+
+est_q <- function(subset,period) {
+  temp = (s_hat[subset]*(1-estd_sparsity[subset,period]) 
+          + (1-s_hat[subset])*estd_sparsity[subset,period])
+  -log(1 - prop_changes[subset,period]/temp)/survey_difft[period]
+}
+
+estd_q <- sapply(1:4, function(p) sapply(1:4, function(s) est_q(s,p)))
+
+#Convert to data.frame for ggplot
+labels = c("Same Floor / Same Year", "Same Floor / Different Years",
+           "Different Floors / Same Year", "Different Floors / Different Years")
+sparsity_df <- data.frame(x = sort(rep(1:5,4)), level = rep(labels,5),
+                          sparsity = as.numeric(estd_sparsity))
+q_df <- data.frame(x = sort(rep(1:4,4)), level = rep(labels,4),
+                   q = as.numeric(estd_q))
+
+p1 <- ggplot(sparsity_df, aes(x=x, y=sparsity, group = level, color = level)) +
+        geom_line() +
+        geom_point() +
+        ylim(0,1) +
+        ylab(expression(s)) +
+        scale_x_continuous(breaks = seq(1:5), 
+          labels = c("9/9","10/19","12/13","3/5","4/17"), name = "Date") +
+        guides(colour=guide_legend(title = "")) +
+        theme_bw()
+p2 <- ggplot(q_df, aes(x=x, y=q, group = level, color = level)) +
+        geom_line() +
+        geom_point() +
+        ylim(0,1e-3) +
+        ylab(expression(q)) +
+        scale_x_continuous(breaks = seq(1:4), name = "Period of Transition",
+          limits = c(1,4.25),
+          labels = c("9/9 to 10/19","10/19 to 12/13",
+                     "12/13 to 3/5","3/5 to 4/17")) +
+        theme_bw()
+
+p <- grid_arrange_shared_legend(p1,p1,p2)
+pdf("survey_ctmc.pdf",9,3)
+plot(p)
+dev.off()
+
+
+
+
+
+#Comparing survey and interaction data
+breaks <- c(0,10,50,100,200,400,600)
+survey_means <- sapply(reported_net, mean)
+
+p1 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0]))) + 
+        geom_histogram(bins = 30, aes(y=..density..)) +
+        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                           limits = c(NA,26)) +
+        ylim(0,0.6) +
+        ylab("Density") +
+        xlab("Number of Interactions") +
+        ggtitle("Reported Friendship 0/5") +
+        theme_bw()
+p2 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.2]))) + 
+        geom_histogram(bins = 30, aes(y=..density..)) +
+        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                           limits = c(NA,26)) +
+        ylim(0,0.6) +
+        ylab("Density") +
+        xlab("Number of Interactions") +
+        ggtitle("Reported Friendship 1/5") +
+        theme_bw()
+p3 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.4]))) + 
+        geom_histogram(bins = 30, aes(y=..density..)) +
+        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                           limits = c(NA,26)) +
+        ylim(0,0.6) +
+        ylab("Density") +
+        xlab("Number of Interactions") +
+        ggtitle("Reported Friendship 2/5") +
+        theme_bw()
+p4 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.6]))) + 
+        geom_histogram(bins = 30, aes(y=..density..)) +
+        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                           limits = c(NA,26)) +
+        ylim(0,0.6) +
+        ylab("Density") +
+        xlab("Number of Interactions") +
+        ggtitle("Reported Friendship 3/5") +
+        theme_bw()
+p5 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.8]))) + 
+        geom_histogram(bins = 30, aes(y=..density..)) +
+        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                           limits = c(NA,26)) +
+        ylim(0,0.6) +
+        ylab("Density") +
+        xlab("Number of Interactions") +
+        ggtitle("Reported Friendship 4/5") +
+        theme_bw()
+p6 <- ggplot(NULL, aes(x = sqrt(data_list$N[sapply(reported_net, mean) == 1]))) + 
+        geom_histogram(bins = 30, aes(y=..density..)) +
+        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                           limits = c(NA,26)) +
+        ylim(0,0.6) +
+        ylab("Density") +
+        xlab("Number of Interactions") +
+        ggtitle("Reported Friendship 5/5") +
+        theme_bw()
+
+pdf("figures/ints_vs_surveys.pdf",9,4)
+grid.arrange(p1,p2,p3,p4,p5,p6,nrow = 2)
+dev.off()
+
 
 
 
@@ -508,6 +649,6 @@ for(i in 1:num.time.steps) {
    dev.off()
 }
 
-#Transform sequence of .png into .avi
+#Transform sequence of .png into .mp4
 #Requires ffmpeg, which can be found here: https://ffmpeg.org/
-#ffmpeg -framerate 5 -i NetAnimation%03d.png -c:v libx264 -r 60 -pix_fmt yuv420p ego_movie.avi
+#ffmpeg -framerate 5 -i NetAnimation%03d.png -c:v libx264 -r 60 -pix_fmt yuv420p egocentric_mit_network.mp4

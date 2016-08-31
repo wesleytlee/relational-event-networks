@@ -45,11 +45,13 @@ data$last.time <- strptime(data$last.time, format = "%Y/%m/%d %H:%M:%S")
 data = data[data$this.ID %in% tag_ids,]
 data = data[data$enc.ID %in% tag_ids,]
 
-#Calculate periods of activity
+#Calculate periods of activity (tags are confirmed to work from 7/19 to 7/21 AM)
+min_periods <- strptime(c("2014/07/19 17:00:00", "2014/07/21 09:00:00"), 
+            format = "%Y/%m/%d %H:%M:%S")
 indices = t(combn(tag_ids,2))
 active_periods <- sapply(tag_ids, function(i) 
-  c(min(data$first.time[data$this.ID == i | data$enc.ID == i]),
-    max(data$last.time[data$this.ID == i | data$enc.ID == i])))
+  c(min(data$first.time[data$this.ID == i | data$enc.ID == i], min_periods[1]),
+    max(data$last.time[data$this.ID == i | data$enc.ID == i], min_periods[2])))
 dyad_active <- function(index) {
   c(max(active_periods[tag_ids == index[1]][[1]][1],
         active_periods[tag_ids == index[2]][[1]][1]),

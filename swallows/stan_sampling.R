@@ -18,6 +18,7 @@ load("processed_data/pre_swallow.RData")
 
 #Reformat data for Stan
 #######################
+start = strptime("2014-07-19", format = "%Y-%m-%d")
 
 N = sapply(times,length)
 ints_mat = matrix(data = 0, nrow = choose(length(tag_ids),2), ncol = max(N))
@@ -64,8 +65,8 @@ stan_init <- list(param_init)
 
 #MCMC Sampling
 start_t <- Sys.time()
-fit <- sampling(barn_model, data = data_list, init = stan_init, iter = 20000, 
-                  warmup = 2000, chains = 1)
+fit <- sampling(barn_model, data = data_list, init = stan_init, iter = 10000, 
+                  warmup = 1000, chains = 1)
 stop_t <- Sys.time()
 dur_t <- stop_t - start_t
 
