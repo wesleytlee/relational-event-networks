@@ -6,6 +6,11 @@
 #Load in requisite libraries and processed daa
 ##############################################
 
+#Requires package "Cairo"
+setHook(packageEvent("grDevices", "onLoad"),
+        function(...) grDevices::X11.options(type='cairo'))
+options(device='x11')
+
 library(RColorBrewer)
 library(ggplot2)
 library(gridExtra)
@@ -56,10 +61,11 @@ p1 <- ggplot(NULL, aes(data_list$N, fill = gender)) +
                      guide = guide_legend(title = "Sex Pairing")) +
    ggtitle("Interaction Counts Per Dyad") +
    ylab("Number of Dyads") +
-   xlab("Interaction Counts")
+   xlab("Interaction Counts") +
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
 
 #Histogram of Interactions over Time
-
 #Desire slightly non-linear scale for better use of space
 map_times <- function(t, skip) {
   if(t >= 102) {
@@ -101,11 +107,13 @@ p2 <- ggplot(NULL, aes(all_times, fill = all_gender)) +
          ggtitle("Interactions Over Time") +
          ylab("Avg. Interactions Per Dyad") +
          scale_x_continuous(breaks = seq(5,35,10), 
-            labels = c("July 20","July 21","July 22","July 23"), name = "Time")
+            labels = c("July 20","July 21","July 22","July 23"), name = "Time") +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
 
+cairo_ps("figures/fig8_descriptive_swallow.eps", 
+         width=9, height=3, fallback_resolution = 800)
 p <- grid_arrange_shared_legend(p1, p2)
-pdf("figures/descriptive_plots.pdf",9,3)
-   plot(p)
 dev.off()
 
 
@@ -115,17 +123,62 @@ dev.off()
 #Trace plots
 ############
 
-p1 <- ggplot(NULL, aes(x=1:9000, y=est_params$c[,2])) + geom_line() +
-  xlab("Iterations") + ylab(expression(c[MF]))
-p2 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,1])) + geom_line() +
-  xlab("Iterations") + ylab(expression(k[1]))
-p3 <- ggplot(NULL, aes(x=1:9000, y=est_params$sparsity)) + geom_line() +
-  xlab("Iterations") + ylab(expression(s))
-p4 <- ggplot(NULL, aes(x=1:9000, y=est_params$t_prob)) + geom_line() +
-  xlab("Iterations") + ylab(expression(q))
+p1 <- ggplot(NULL, aes(x=1:9000, y=est_params$c[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(c[FF])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p2 <- ggplot(NULL, aes(x=1:9000, y=est_params$c[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(c[MF])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p3 <- ggplot(NULL, aes(x=1:9000, y=est_params$c[,3])) + geom_line() +
+         xlab("Iterations") + ylab(expression(c[MM])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p4 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[1])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p5 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,2])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[2])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p6 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,3])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[3])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p7 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,4])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[4])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p8 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,5])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[5])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p9 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,6])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[6])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p10 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,7])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[7])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p11 <- ggplot(NULL, aes(x=1:9000, y=est_params$k[,8])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[8])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p12 <- ggplot(NULL, aes(x=1:9000, y=est_params$sparsity)) + geom_line() +
+         xlab("Iterations") + ylab(expression(s)) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p13 <- ggplot(NULL, aes(x=1:9000, y=est_params$t_prob)) + geom_line() +
+         xlab("Iterations") + ylab(expression(q)) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-pdf("figures/swallow_trace.pdf",6,3)
-grid.arrange(p1,p2,p3,p4,nrow = 2)
+cairo_ps("figures/fig14_swallow_traces.eps", 
+         width=9, height=10, fallback_resolution = 800)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,ncol = 3)
 dev.off()
 
 
@@ -183,7 +236,8 @@ nodes.cols = covariates$Sex
 nodes.cols = gsub("F",rgb(1,0,0,0.4),nodes.cols)
 nodes.cols = gsub("M",rgb(0,0,1,0.4),nodes.cols)
 
-pdf("figures/daily_snapshots.pdf",8,2)
+cairo_ps("figures/fig1_daily_snapshots.eps", 
+         width=9, height=2, fallback_resolution = 800)
 par(mar = c(0,0.5,1,0.5), mfrow = c(1,5))
 for(day in 1:5) {
     m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
@@ -275,8 +329,10 @@ p1 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "FF"),],
    xlab("Time") +
    xlim(17,105) +
    ylim(0,1) +
-   theme(legend.position="none") +
-   scale_x_datetime()
+   scale_x_datetime() +
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12),
+         legend.position="none")
 
 p2 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "MF"),], 
              aes(x=time,y=probs,group=dyads)) +
@@ -286,8 +342,10 @@ p2 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "MF"),],
    xlab("Time") +
    xlim(17,105) +
    ylim(0,1) +
-   theme(legend.position="none") +
-   scale_x_datetime()
+   scale_x_datetime() +
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12),
+         legend.position="none")
 
 p3 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "MM"),], 
              aes(x=time,y=probs,group=dyads)) +
@@ -297,10 +355,13 @@ p3 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "MM"),],
    xlab("Time") +
    xlim(17,105) +
    ylim(0,1) +
-   theme(legend.position="none") +
-   scale_x_datetime()
+   scale_x_datetime() + 
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12),
+         legend.position="none")
 
-pdf("figures/paths_by_sex.pdf",9,3)
+cairo_ps("figures/fig9_swallow_paths.eps", 
+         width=9, height=3, fallback_resolution = 800)
 grid.arrange(p1,p2,p3,nrow = 1)
 dev.off()
 
@@ -310,7 +371,8 @@ dev.off()
 
 #Sexual Selection - Tail Streamer Length in Males
 #################################################
-pdf("figures/sexual_selection.pdf",8,3)
+cairo_ps("figures/fig11_swallow_selection.eps", 
+         width=9, height=3, fallback_resolution = 800)
 
 m <- matrix(c(1,2,3),nrow = 1,ncol = 3)
 layout(mat = m,widths = c(0.45,0.45,0.1))
@@ -365,7 +427,8 @@ dev.off()
 #Sub-network of male swallows
 #############################
 
-pdf("figures/male_dyads.pdf",5,3)
+cairo_ps("figures/fig10_swallow_males.eps", 
+         width=5, height=3, fallback_resolution = 800)
 par(mar = c(0,0,1,0), mfrow = c(1,1))
 m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
 m[lower.tri(m, diag = FALSE)] <- dyad_friends
@@ -544,7 +607,7 @@ for(i in 1:num.time.steps) {
    
    png(paste("figures/animated_net/NetAnimation",
              sprintf("%03d", i),".png",sep=""),
-       2000,800,res = 144)
+       7.5,3,units="in",pointsize=6,res = 800)
    par(mfrow = c(1,2), mar = c(1,3,2,3), oma = c(1,0,0,0))
    plot.igraph(net_raw,layout=fr_layout, edge.curved = 0, edge.width = 2, 
                main = "Encounters")

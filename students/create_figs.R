@@ -6,6 +6,11 @@
 #Load in requisite libraries and processed daa
 ##############################################
 
+#Requires package "Cairo"
+setHook(packageEvent("grDevices", "onLoad"),
+        function(...) grDevices::X11.options(type='cairo'))
+options(device='x11')
+
 library(RColorBrewer)
 library(ggplot2)
 library(grid)
@@ -60,24 +65,32 @@ p1 <- ggplot(NULL, aes(as.time(unlist(proximity2)), fill = during_night)) +
       breaks = as.POSIXct(c("2008-09-01","2008-10-01","2008-11-01","2008-12-01",
          "2009-01-01","2009-02-01", "2009-03-01","2009-04-01","2009-05-01",
          "2009-06-01"), tz = "GMT"), 
-      labels = c("","Oct","","","Jan","","","Apr","",""))
+      labels = c("","Oct","","","Jan","","","Apr","","")) +
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
 p2 <- ggplot(NULL, aes(weekly[months >= 9], fill = during_night[months >= 9])) +
    geom_histogram(bins = 336/2) +
    ggtitle("Weekly Periodicity (Oct to Dec)") +
    ylab("Number of Interactions") +
    scale_x_continuous(breaks = seq(0,336,24*2), name = "Time",
-      labels = c("Su","M","T","W","Th","F","Sa","Su"))
+      labels = c("Su","M","T","W","Th","F","Sa","Su")) +
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
 p3 <- ggplot(NULL, aes(weekly[months %in% c(3,4)], 
                        fill = during_night[months %in% c(3,4)])) +
-  geom_histogram(bins = 336/2) +
-  ggtitle("Weekly Periodicity (Apr to May)") +
-  ylab("Number of Interactions") +
-  scale_x_continuous(breaks = seq(0,336,24*2), name = "Time",
-                     labels = c("Su","M","T","W","Th","F","Sa","Su"))
+   geom_histogram(bins = 336/2) +
+   ggtitle("Weekly Periodicity (Apr to May)") +
+   ylab("Number of Interactions") +
+   scale_x_continuous(breaks = seq(0,336,24*2), name = "Time",
+                      labels = c("Su","M","T","W","Th","F","Sa","Su")) +
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
+
+cairo_ps("figures/fig3_descriptive_mit.eps", 
+         width=9, height=3, fallback_resolution = 800)
 p <- grid_arrange_shared_legend(p1, p1, p2, p3)
-pdf("figures/descriptive_mit.pdf",9,3)
-plot(p)
 dev.off()
+
 
 
 
@@ -112,6 +125,7 @@ weekly_patterns <- data.frame(x = rep(1:336,4), ints = c(wv,wv2,wv3,wv4),
    factor = factor(sapply(labels, function(i) rep(i,336)), levels = labels))
 
 
+
 factor.cols <- brewer.pal(4, "Paired")
 #Rectangles to highlight days
 rect <- data.frame(xmin=8*2+seq(0,335,24*2), xmax=17*2+seq(0,335,24*2),
@@ -122,7 +136,9 @@ p0 <- ggplot(weekly_patterns, aes(x,ints, colour = factor)) +
    scale_size_manual(values = c(1, 1, 1.5, 1.5)) +
    scale_colour_manual(values = factor.cols[c(2,1,4,3)]) +
    guides(size=guide_legend(title = "Legend",keywidth = 2, keyheight = 1),
-          colour=guide_legend(title = "Legend"))
+          colour=guide_legend(title = "Legend")) +
+   theme_bw() +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
 p1 <- ggplot(weekly_patterns[c(1:336,336+1:336),], 
              aes(x,ints,group = factor,colour = factor)) +
    geom_line(aes(size = factor), alpha=0.8) +
@@ -134,8 +150,8 @@ p1 <- ggplot(weekly_patterns[c(1:336,336+1:336),],
    ylim(0,17.5) +
    theme_bw() +
    geom_rect(data=rect, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
-               color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE)
-
+               color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE) +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
 p2 <- ggplot(weekly_patterns[c(336*2+1:336,336*3+1:336),], 
              aes(x,ints,group = factor, colour = factor)) +
    geom_line(aes(size = factor), alpha=0.8) +
@@ -147,7 +163,8 @@ p2 <- ggplot(weekly_patterns[c(336*2+1:336,336*3+1:336),],
    ylim(0,17.5) +
    theme_bw() +
    geom_rect(data=rect, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
-             color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE)
+             color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE) +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
 p3 <- ggplot(weekly_patterns[c(1:336,336*2+1:336),], 
              aes(x,ints,group = factor, colour = factor)) +
    geom_line(aes(size = factor), alpha=0.8) +
@@ -159,12 +176,14 @@ p3 <- ggplot(weekly_patterns[c(1:336,336*2+1:336),],
    ylim(0,17.5) +
    theme_bw() +
    geom_rect(data=rect, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
-             color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE)
-p <- grid_arrange_shared_legend(p0,p1,p2,p3)
+             color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE) +
+   theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-pdf("figures/mit_weekly.pdf",9,3)
-plot(p)
+cairo_ps("figures/fig4_mit_periodicity.eps", 
+         width=9, height=3, fallback_resolution = 800)
+p <- grid_arrange_shared_legend(p0, p1, p2, p3)
 dev.off()
+
 
 
 
@@ -216,28 +235,31 @@ q_df <- data.frame(x = sort(rep(1:4,4)), level = rep(labels,4),
                    q = as.numeric(estd_q))
 
 p1 <- ggplot(sparsity_df, aes(x=x, y=sparsity, group = level, color = level)) +
-        geom_line() +
-        geom_point() +
-        ylim(0,1) +
-        ylab(expression(s)) +
-        scale_x_continuous(breaks = seq(1:5), 
-          labels = c("9/9","10/19","12/13","3/5","4/17"), name = "Date") +
-        guides(colour=guide_legend(title = "")) +
-        theme_bw()
-p2 <- ggplot(q_df, aes(x=x, y=q, group = level, color = level)) +
-        geom_line() +
-        geom_point() +
-        ylim(0,1e-3) +
-        ylab(expression(q)) +
-        scale_x_continuous(breaks = seq(1:4), name = "Period of Transition",
-          limits = c(1,4.25),
-          labels = c("9/9 to 10/19","10/19 to 12/13",
-                     "12/13 to 3/5","3/5 to 4/17")) +
-        theme_bw()
+         geom_line() +
+         geom_point() +
+         ylim(0,1) +
+         ylab(paste("Empirical",expression(s))) +
+         scale_x_continuous(breaks = seq(1:5), 
+         labels = c("9/9","10/19","12/13","3/5","4/17"), name = "Date") +
+         guides(colour=guide_legend(title = "")) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
 
+p2 <- ggplot(q_df, aes(x=x, y=q, group = level, color = level)) +
+         geom_line() +
+         geom_point() +
+         ylim(0,1e-3) +
+         ylab(paste("Empirical",expression(q))) +
+         scale_x_continuous(breaks = seq(1:4), name = "Period of Transition",
+         limits = c(1,4.25),
+         labels = c("9/9 to 10/19","10/19 to 12/13",
+                    "12/13 to 3/5","3/5 to 4/17")) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+
+cairo_ps("figures/fig5_survey_ctmc.eps", 
+         width=9, height=3, fallback_resolution = 800)
 p <- grid_arrange_shared_legend(p1,p1,p2)
-pdf("survey_ctmc.pdf",9,3)
-plot(p)
 dev.off()
 
 
@@ -250,60 +272,72 @@ survey_means <- sapply(reported_net, mean)
 
 p1 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0]))) + 
         geom_histogram(bins = 30, aes(y=..density..)) +
-        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
-                           limits = c(NA,26)) +
-        ylim(0,0.6) +
-        ylab("Density") +
-        xlab("Number of Interactions") +
-        ggtitle("Reported Friendship 0/5") +
-        theme_bw()
+         scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                            limits = c(NA,26)) +
+         ylim(0,0.6) +
+         ylab("Density") +
+         xlab("Number of Interactions") +
+         ggtitle("Reported Friendship 0/5") +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+
 p2 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.2]))) + 
         geom_histogram(bins = 30, aes(y=..density..)) +
-        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
-                           limits = c(NA,26)) +
-        ylim(0,0.6) +
-        ylab("Density") +
-        xlab("Number of Interactions") +
-        ggtitle("Reported Friendship 1/5") +
-        theme_bw()
-p3 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.4]))) + 
-        geom_histogram(bins = 30, aes(y=..density..)) +
-        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
-                           limits = c(NA,26)) +
-        ylim(0,0.6) +
-        ylab("Density") +
-        xlab("Number of Interactions") +
-        ggtitle("Reported Friendship 2/5") +
-        theme_bw()
-p4 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.6]))) + 
-        geom_histogram(bins = 30, aes(y=..density..)) +
-        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
-                           limits = c(NA,26)) +
-        ylim(0,0.6) +
-        ylab("Density") +
-        xlab("Number of Interactions") +
-        ggtitle("Reported Friendship 3/5") +
-        theme_bw()
-p5 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.8]))) + 
-        geom_histogram(bins = 30, aes(y=..density..)) +
-        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
-                           limits = c(NA,26)) +
-        ylim(0,0.6) +
-        ylab("Density") +
-        xlab("Number of Interactions") +
-        ggtitle("Reported Friendship 4/5") +
-        theme_bw()
-p6 <- ggplot(NULL, aes(x = sqrt(data_list$N[sapply(reported_net, mean) == 1]))) + 
-        geom_histogram(bins = 30, aes(y=..density..)) +
-        scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
-                           limits = c(NA,26)) +
-        ylim(0,0.6) +
-        ylab("Density") +
-        xlab("Number of Interactions") +
-        ggtitle("Reported Friendship 5/5") +
-        theme_bw()
+         scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                            limits = c(NA,26)) +
+         ylim(0,0.6) +
+         ylab("Density") +
+         xlab("Number of Interactions") +
+         ggtitle("Reported Friendship 1/5") +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-pdf("figures/ints_vs_surveys.pdf",9,4)
+p3 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.4]))) + 
+         geom_histogram(bins = 30, aes(y=..density..)) +
+         scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                            limits = c(NA,26)) +
+         ylim(0,0.6) +
+         ylab("Density") +
+         xlab("Number of Interactions") +
+         ggtitle("Reported Friendship 2/5") +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+
+p4 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.6]))) + 
+         geom_histogram(bins = 30, aes(y=..density..)) +
+         scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                            limits = c(NA,26)) +
+         ylim(0,0.6) +
+         ylab("Density") +
+         xlab("Number of Interactions") +
+         ggtitle("Reported Friendship 3/5") +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+
+p5 <- ggplot(NULL, aes(x = sqrt(data_list$N[survey_means == 0.8]))) + 
+         geom_histogram(bins = 30, aes(y=..density..)) +
+         scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                            limits = c(NA,26)) +
+         ylim(0,0.6) +
+         ylab("Density") +
+         xlab("Number of Interactions") +
+         ggtitle("Reported Friendship 4/5") +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+
+p6 <- ggplot(NULL, aes(x = sqrt(data_list$N[sapply(reported_net, mean) == 1]))) + 
+         geom_histogram(bins = 30, aes(y=..density..)) +
+         scale_x_continuous(breaks = sqrt(breaks), labels = breaks, 
+                            limits = c(NA,26)) +
+         ylim(0,0.6) +
+         ylab("Density") +
+         xlab("Number of Interactions") +
+         ggtitle("Reported Friendship 5/5") +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+
+cairo_ps("figures/fig12_ints_vs_surveys.eps", 
+         width=9, height=4, fallback_resolution = 800)
 grid.arrange(p1,p2,p3,p4,p5,p6,nrow = 2)
 dev.off()
 
@@ -316,17 +350,79 @@ dev.off()
 ############
 output <- extract(fit)
 
-p1 <- ggplot(NULL, aes(x=1:9000, y=output$c_1)) + geom_line() +
-   xlab("Iterations") + ylab(expression(c[1]))
-p2 <- ggplot(NULL, aes(x=1:9000, y=output$k_1[,1])) + geom_line() +
-   xlab("Iterations") + ylab(expression(k[1,1]))
-p3 <- ggplot(NULL, aes(x=1:9000, y=output$s_0)) + geom_line() +
-   xlab("Iterations") + ylab(expression(s[0]))
-p4 <- ggplot(NULL, aes(x=1:9000, y=output$t_prob)) + geom_line() +
-   xlab("Iterations") + ylab(expression(q))
+p1 <- ggplot(NULL, aes(x=1:9000, y=output$c_0[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(c["0,t2"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p2 <- ggplot(NULL, aes(x=1:9000, y=output$c_0[,2])) + geom_line() +
+         xlab("Iterations") + ylab(expression(c["0,t3"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p3 <- ggplot(NULL, aes(x=1:9000, y=output$c_1)) + geom_line() +
+         xlab("Iterations") + ylab(expression(c[1])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p4 <- ggplot(NULL, aes(x=1:9000, y=output$c_2[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(c["2,1"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p5 <- ggplot(NULL, aes(x=1:9000, y=output$c_2[,2])) + geom_line() +
+         xlab("Iterations") + ylab(expression(c["2,2"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p6 <- ggplot(NULL, aes(x=1:9000, y=output$c_3)) + geom_line() +
+         xlab("Iterations") + ylab(expression(c[3])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p7 <- ggplot(NULL, aes(x=1:9000, y=output$k_0)) + geom_line() +
+         xlab("Iterations") + ylab(expression(k[0])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p8 <- ggplot(NULL, aes(x=1:9000, y=output$k_1[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k["1,1"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p9 <- ggplot(NULL, aes(x=1:9000, y=output$k_1[,2])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k["1,2"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p10 <- ggplot(NULL, aes(x=1:9000, y=output$k_1[,3])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k["1,3"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p11 <- ggplot(NULL, aes(x=1:9000, y=output$k_3[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k["3,1"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p12 <- ggplot(NULL, aes(x=1:9000, y=output$k_3[,2])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k["3,2"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p13 <- ggplot(NULL, aes(x=1:9000, y=output$k_3[,3])) + geom_line() +
+         xlab("Iterations") + ylab(expression(k["3,3"])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p14 <- ggplot(NULL, aes(x=1:9000, y=output$s_0)) + geom_line() +
+         xlab("Iterations") + ylab(expression(s[0])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p15 <- ggplot(NULL, aes(x=1:9000, y=output$s[,1])) + geom_line() +
+         xlab("Iterations") + ylab(expression(s[1])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p16 <- ggplot(NULL, aes(x=1:9000, y=output$s[,2])) + geom_line() +
+         xlab("Iterations") + ylab(expression(s[2])) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
+p17 <- ggplot(NULL, aes(x=1:9000, y=output$t_prob)) + geom_line() +
+         xlab("Iterations") + ylab(expression(q)) +
+         theme_bw() +
+         theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-pdf("figures/mit_trace.pdf",6,3)
-grid.arrange(p1,p2,p3,p4,nrow = 2)
+cairo_ps("figures/fig13_mit_traces.eps", 
+         width=9, height=12, fallback_resolution = 800)
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,
+             ncol = 3)
 dev.off()
 
 
@@ -445,7 +541,8 @@ plot_snapshot <- function(adj_mat, layout, active, title = "") {
 }
 
 
-pdf("figures/mit_snapshots.pdf",9,2)
+cairo_ps("figures/fig6_mit_snapshots.eps", 
+         width=9, height=2, fallback_resolution = 800)
 par(mfrow = c(1,4), mar = c(0,0,1,0))
 plot_snapshot(ships_to_adj(reported_net,3), 
               layout, rep(TRUE,57), "12/13/08 - Reported Network")
@@ -507,7 +604,8 @@ plot_snapshot <- function(adj_mat, subset, layout, active, title = "") {
 
 
 
-pdf("figures/ego_snapshots.pdf",9,4)
+cairo_ps("figures/fig7_mit_ego_snapshots.eps", 
+         width=9, height=4, fallback_resolution = 800)
 
 m <- matrix(c(1,2,3,4,5,6,7,8,9,9,9,9),nrow = 3,ncol = 4,byrow = TRUE)
 layout(mat = m,heights = c(0.425,0.425,0.15))
@@ -639,7 +737,7 @@ for(i in 1:num.time.steps) {
    
    png(paste("figures/animated_net/NetAnimation",
              sprintf("%03d", i),".png",sep=""),
-       2000,800,res = 144)
+       7.5,3,units="in",pointsize=6,res = 800)
    par(mfrow = c(1,2), mar = c(1,3,2,3), oma = c(1,0,0,0))
    plot.igraph(net_d,layout=ego_layout, edge.curved = 0, edge.width = 5, 
                main = "Proximity Pings")
