@@ -53,10 +53,11 @@ grid_arrange_shared_legend <- function(...) {
 #Basic descriptives of proximity interaction data
 during_night <- !(weekly %% 48 >= 8*2 & weekly %% 48 < 17*2)
 months <- as.POSIXlt(unlist(proximity2), origin = "1970-01-01")$mon
+day.cols <- c("#E69F00", "#000000")
 
 p1 <- ggplot(NULL, aes(as.time(unlist(proximity2)), fill = during_night)) +
    geom_histogram(bins = 60) +
-   scale_fill_discrete(labels = c(TRUE,FALSE),
+   scale_fill_manual(labels = c(TRUE,FALSE), values = day.cols,
                        guide = guide_legend(title = "During Day?")) +
    ggtitle("Interactions Over Time") +
    ylab("Number of Interactions") +
@@ -70,6 +71,7 @@ p1 <- ggplot(NULL, aes(as.time(unlist(proximity2)), fill = during_night)) +
    theme(plot.title = element_text(size=12), text = element_text(size=12))
 p2 <- ggplot(NULL, aes(weekly[months >= 9], fill = during_night[months >= 9])) +
    geom_histogram(bins = 336/2) +
+   scale_fill_manual(labels = c(TRUE,FALSE), values = day.cols) +
    ggtitle("Weekly Periodicity (Oct to Dec)") +
    ylab("Number of Interactions") +
    scale_x_continuous(breaks = seq(0,336,24*2), name = "Time",
@@ -79,6 +81,7 @@ p2 <- ggplot(NULL, aes(weekly[months >= 9], fill = during_night[months >= 9])) +
 p3 <- ggplot(NULL, aes(weekly[months %in% c(3,4)], 
                        fill = during_night[months %in% c(3,4)])) +
    geom_histogram(bins = 336/2) +
+   scale_fill_manual(labels = c(TRUE,FALSE), values = day.cols) +
    ggtitle("Weekly Periodicity (Apr to May)") +
    ylab("Number of Interactions") +
    scale_x_continuous(breaks = seq(0,336,24*2), name = "Time",

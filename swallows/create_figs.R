@@ -233,7 +233,7 @@ int_counts_by_day <- t(sapply(times, function(t)
 day_names <- c("7/19", "7/20", "7/21", "7/22", "7/23")
 
 nodes.cols = covariates$Sex
-nodes.cols = gsub("F",rgb(1,0,0,0.4),nodes.cols)
+nodes.cols = gsub("F",rgb(1,0,0,0.2),nodes.cols)
 nodes.cols = gsub("M",rgb(0,0,1,0.4),nodes.cols)
 
 cairo_ps("figures/fig1_daily_snapshots.eps", 
@@ -386,7 +386,7 @@ m[m < 0.1] <- 0
 net <- graph.adjacency(m,mode = "undirected", weighted = TRUE, diag = FALSE)
 V(net)$sex = covariates$Sex
 V(net)$color = V(net)$sex
-V(net)$color = gsub("F",rgb(1,0,0,0.4),V(net)$color)
+V(net)$color = gsub("F",rgb(1,0,0,0.2),V(net)$color)
 
 #Tail streamer length
 for(s in which(covariates$Sex == "M")) {
@@ -453,6 +453,10 @@ dev.off()
 
 #Network movie
 ##############
+nodes.cols.bold = covariates$Sex
+nodes.cols.bold = gsub("F",rgb(1,0,0),nodes.cols.bold)
+nodes.cols.bold = gsub("M",rgb(0,0,1),nodes.cols.bold)
+
 break_times = strptime(c("2014-07-19 17:00:00","2014-07-19 20:00:00",
                          "2014-07-20 6:00:00","2014-07-20 9:00:00",
                          "2014-07-20 17:00:00","2014-07-20 20:00:00",
@@ -586,14 +590,15 @@ for(i in 1:num.time.steps) {
    V(net_raw)$label.color <- rgb(0,0,0)
    isActive = ((i-1)>=active_m5[,1] & (i-1)<=active_m5[,2])
    V(net_raw)$color[isActive] <- nodes.cols[isActive]
-   V(net_raw)$label.color[isActive] <- nodes.cols[isActive]
+   V(net_raw)$label.color[isActive] <- nodes.cols.bold[isActive]
    nowInactive = (i-1)-active_m5[,2] <= 
       look.back.default & (i-1)-active_m5[,2] > 0
    smooth = (1-(i-1-active_m5[nowInactive,2])/look.back.default)
    if(length(smooth)) {
       V(net_raw)$color[nowInactive] <- 
          rgb(smooth*as.numeric(V(net_raw)$red[nowInactive]), 0, 
-             smooth*as.numeric(V(net_raw)$blue[nowInactive]), 0.4)
+             smooth*as.numeric(V(net_raw)$blue[nowInactive]), 
+             0.4 - 0.2*as.numeric(V(net_raw)$red[nowInactive]))
       V(net_raw)$label.color[nowInactive] <- 
          rgb(smooth*as.numeric(V(net_raw)$red[nowInactive]), 0, 
              smooth*as.numeric(V(net_raw)$blue[nowInactive]))
