@@ -4,9 +4,9 @@ This repository contains code and figures for the two applications featured in o
 
 ## Authors
 
-1. [Wesley Lee] (https://www.stat.washington.edu/people/wtlee/)
-2. [Bailey K. Fosdick] (http://www.stat.colostate.edu/~bailey/)
-3. [Tyler H. McCormick] (http://www.stat.washington.edu/~tylermc/)
+* [Wesley Lee] (https://www.stat.washington.edu/people/wtlee/)
+* [Bailey K. Fosdick] (http://www.stat.colostate.edu/~bailey/)
+* [Tyler H. McCormick] (http://www.stat.washington.edu/~tylermc/)
 
 ## Directory Structure
 
