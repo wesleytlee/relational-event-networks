@@ -1,6 +1,6 @@
 # Supplementary material for paper "Inferring social structure from continuous-time interaction data"
 
-This project contains code and figures for the two applications featured in our paper "Inferring social structure from continuous-time interaction data." Please visit https://wesleytlee.github.io/relational-event-networks/ for more details.
+This repository contains code and figures for the two applications featured in our paper "Inferring social structure from continuous-time interaction data." Please visit https://wesleytlee.github.io/relational-event-networks/ for more details.
 
 ## Authors
 
