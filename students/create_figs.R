@@ -3,18 +3,25 @@
 
 
 
+
+#Save figures as .eps (TRUE) or .pdf (FALSE)
+#Issue with grid_arrange_shared_legend() and .pdf format
+printEPS = TRUE
+
 #Load in requisite libraries and processed daa
 ##############################################
 
-#Requires package "Cairo"
-setHook(packageEvent("grDevices", "onLoad"),
-        function(...) grDevices::X11.options(type='cairo'))
-options(device='x11')
+if(printEPS) {
+   #Requires package "Cairo"
+   setHook(packageEvent("grDevices", "onLoad"),
+           function(...) grDevices::X11.options(type='cairo'))
+   options(device='x11')
+}
 
 library(RColorBrewer)
 library(ggplot2)
-library(grid)
 library(gridExtra)
+library(grid)
 library(rstan)
 library(igraph)
 library(Matrix)
@@ -23,8 +30,8 @@ load("processed_data/stan_pre.RData")
 load("processed_data/stan_output.RData")
 
 pre_load = stanc(file = "students.stan")
-barn_model = stan_model(stanc_ret = pre_load)
-expose_stan_functions(barn_model)
+mit_model = stan_model(stanc_ret = pre_load)
+expose_stan_functions(mit_model)
 
 as.time = function(t) as.POSIXct(t, origin = "1970-01-01")
 
@@ -44,9 +51,7 @@ grid_arrange_shared_legend <- function(...) {
   p <- grid.arrange(
     do.call(arrangeGrob, c(lapply(2:length(plots), function(x)
       plots[[x]] + theme(legend.position="none")),list(nrow = 1))),
-    legend,
-    nrow = 2,
-    heights = unit.c(unit(1, "npc") - lheight, lheight))
+      legend, nrow = 2, heights = unit.c(unit(1, "npc") - lheight, lheight))
   return(p)
 }
 
@@ -89,11 +94,14 @@ p3 <- ggplot(NULL, aes(weekly[months %in% c(3,4)],
    theme_bw() +
    theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-cairo_ps("figures/fig3_descriptive_mit.eps", 
-         width=9, height=3, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig3_descriptive_mit.eps", 
+            width=9, height=3, fallback_resolution = 800)
+} else {
+   pdf("figures/fig3_descriptive_mit.pdf", width=9, height=3)
+}
 p <- grid_arrange_shared_legend(p1, p1, p2, p3)
 dev.off()
-
 
 
 
@@ -182,8 +190,12 @@ p3 <- ggplot(weekly_patterns[c(1:336,336*2+1:336),],
              color="grey", linetype = 0, alpha=0.2, inherit.aes = FALSE) +
    theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-cairo_ps("figures/fig4_mit_periodicity.eps", 
-         width=9, height=3, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig4_mit_periodicity.eps", 
+            width=9, height=3, fallback_resolution = 800)
+} else {
+   pdf("figures/fig4_mit_periodicity.pdf", width=9, height=3)
+}
 p <- grid_arrange_shared_legend(p0, p1, p2, p3)
 dev.off()
 
@@ -260,8 +272,12 @@ p2 <- ggplot(q_df, aes(x=x, y=q, group = level, color = level)) +
          theme_bw() +
          theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-cairo_ps("figures/fig5_survey_ctmc.eps", 
-         width=9, height=3, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig5_survey_ctmc.eps", 
+            width=9, height=3, fallback_resolution = 800)
+} else {
+   pdf("figures/fig5_survey_ctmc.pdf", width=9, height=3)
+}
 p <- grid_arrange_shared_legend(p1,p1,p2)
 dev.off()
 
@@ -339,8 +355,12 @@ p6 <- ggplot(NULL, aes(x = sqrt(data_list$N[sapply(reported_net, mean) == 1]))) 
          theme_bw() +
          theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-cairo_ps("figures/fig12_ints_vs_surveys.eps", 
-         width=9, height=4, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig12_ints_vs_surveys.eps", 
+            width=9, height=4, fallback_resolution = 800)
+} else {
+   pdf("figures/fig12_ints_vs_surveys.pdf", width=9, height=4)
+}
 grid.arrange(p1,p2,p3,p4,p5,p6,nrow = 2)
 dev.off()
 
@@ -422,8 +442,12 @@ p17 <- ggplot(NULL, aes(x=1:9000, y=output$t_prob)) + geom_line() +
          theme_bw() +
          theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-cairo_ps("figures/fig13_mit_traces.eps", 
-         width=9, height=12, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig13_mit_traces.eps", 
+            width=9, height=12, fallback_resolution = 800)
+} else {
+   pdf("figures/fig13_mit_traces.pdf", width=9, height=12)
+}
 grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,
              ncol = 3)
 dev.off()
@@ -543,9 +567,12 @@ plot_snapshot <- function(adj_mat, layout, active, title = "") {
                main = title)
 }
 
-
-cairo_ps("figures/fig6_mit_snapshots.eps", 
-         width=9, height=2, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig6_mit_snapshots.eps", 
+            width=9, height=2, fallback_resolution = 800)
+} else {
+   pdf("figures/fig6_mit_snapshots.pdf", width=9, height=2)
+}
 par(mfrow = c(1,4), mar = c(0,0,1,0))
 plot_snapshot(ships_to_adj(reported_net,3), 
               layout, rep(TRUE,57), "12/13/08 - Reported Network")
@@ -605,11 +632,12 @@ plot_snapshot <- function(adj_mat, subset, layout, active, title = "") {
                edge.width=E(net)$weight*5, main = title)
 }
 
-
-
-cairo_ps("figures/fig7_mit_ego_snapshots.eps", 
-         width=9, height=4, fallback_resolution = 800)
-
+if(printEPS) {
+   cairo_ps("figures/fig7_mit_ego_snapshots.eps", 
+            width=9, height=4, fallback_resolution = 800)
+} else {
+   pdf("figures/fig7_mit_ego_snapshots.pdf", width=9, height=4)
+}
 m <- matrix(c(1,2,3,4,5,6,7,8,9,9,9,9),nrow = 3,ncol = 4,byrow = TRUE)
 layout(mat = m,heights = c(0.425,0.425,0.15))
 

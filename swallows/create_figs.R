@@ -3,13 +3,20 @@
 
 
 
+
+#Save figures as .eps (TRUE) or .pdf (FALSE)
+#Issue with grid_arrange_shared_legend() and .pdf format
+printEPS = TRUE
+
 #Load in requisite libraries and processed daa
 ##############################################
 
-#Requires package "Cairo"
-setHook(packageEvent("grDevices", "onLoad"),
-        function(...) grDevices::X11.options(type='cairo'))
-options(device='x11')
+if(printEPS) {
+   #Requires package "Cairo"
+   setHook(packageEvent("grDevices", "onLoad"),
+           function(...) grDevices::X11.options(type='cairo'))
+   options(device='x11')
+}
 
 library(RColorBrewer)
 library(ggplot2)
@@ -111,8 +118,12 @@ p2 <- ggplot(NULL, aes(all_times, fill = all_gender)) +
          theme_bw() +
          theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-cairo_ps("figures/fig8_descriptive_swallow.eps", 
-         width=9, height=3, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig8_descriptive_swallow.eps", 
+            width=9, height=3, fallback_resolution = 800)
+} else {
+   pdf("figures/fig8_descriptive_swallow.pdf", width=9, height=3)
+}
 p <- grid_arrange_shared_legend(p1, p2)
 dev.off()
 
@@ -176,8 +187,12 @@ p13 <- ggplot(NULL, aes(x=1:9000, y=est_params$t_prob)) + geom_line() +
          theme_bw() +
          theme(plot.title = element_text(size=12), text = element_text(size=12))
 
-cairo_ps("figures/fig14_swallow_traces.eps", 
-         width=9, height=10, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig14_swallow_traces.eps", 
+            width=9, height=10, fallback_resolution = 800)
+} else {
+   pdf("figures/fig14_swallow_traces.pdf", width=9, height=10)
+}
 grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,ncol = 3)
 dev.off()
 
@@ -236,8 +251,12 @@ nodes.cols = covariates$Sex
 nodes.cols = gsub("F",rgb(1,0,0,0.2),nodes.cols)
 nodes.cols = gsub("M",rgb(0,0,1,0.4),nodes.cols)
 
-cairo_ps("figures/fig1_daily_snapshots.eps", 
-         width=9, height=2, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig1_daily_snapshots.eps", 
+            width=9, height=2, fallback_resolution = 800)
+} else {
+   pdf("figures/fig1_daily_snapshots2.pdf", width=9, height=2)
+}
 par(mar = c(0,0.5,1,0.5), mfrow = c(1,5))
 for(day in 1:5) {
     m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
@@ -360,8 +379,12 @@ p3 <- ggplot(network_paths[network_paths$dyads %in% which(gender == "MM"),],
    theme(plot.title = element_text(size=12), text = element_text(size=12),
          legend.position="none")
 
-cairo_ps("figures/fig9_swallow_paths.eps", 
-         width=9, height=3, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig9_swallow_paths.eps", 
+            width=9, height=3, fallback_resolution = 800)
+} else {
+   pdf("figures/fig9_swallow_paths.pdf", width=9, height=3)
+}
 grid.arrange(p1,p2,p3,nrow = 1)
 dev.off()
 
@@ -371,8 +394,12 @@ dev.off()
 
 #Sexual Selection - Tail Streamer Length in Males
 #################################################
-cairo_ps("figures/fig11_swallow_selection.eps", 
-         width=9, height=3, fallback_resolution = 800)
+if(printEPS) {
+   cairo_ps("figures/fig11_swallow_selection.eps", 
+            width=9, height=3, fallback_resolution = 800)
+} else {
+   pdf("figures/fig11_swallow_selection.pdf", width=9, height=3)
+}
 
 m <- matrix(c(1,2,3),nrow = 1,ncol = 3)
 layout(mat = m,widths = c(0.45,0.45,0.1))
@@ -426,9 +453,13 @@ dev.off()
 
 #Sub-network of male swallows
 #############################
+if(printEPS) {
+   cairo_ps("figures/fig10_swallow_males.eps", 
+            width=5, height=3, fallback_resolution = 800)
+} else {
+   pdf("figures/fig10_swallow_males.pdf", width=5, height=3)
+}
 
-cairo_ps("figures/fig10_swallow_males.eps", 
-         width=5, height=3, fallback_resolution = 800)
 par(mar = c(0,0,1,0), mfrow = c(1,1))
 m <- matrix(data = 0, nrow = length(tag_ids), ncol = length(tag_ids))
 m[lower.tri(m, diag = FALSE)] <- dyad_friends
