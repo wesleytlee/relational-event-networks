@@ -595,7 +595,7 @@ E(net_raw)$m5 = unlist(sapply(1:(data_list$D), function(i)
    if(data_list$N[i]) ints_m5[i,1:data_list$N[i]]))
 E(net_raw)$color = "black"
 E(net_raw)$green = unlist(sapply(1:(data_list$D), function(i) if(data_list$N[i]) 
-   snapshots[i,ints_m5[i,1:(data_list$N[i])]+1] > 0.5))*1
+   snapshots[i,ints_m5[i,1:(data_list$N[i])]+1] > 0.8))*1
 E(net_raw)$alpha = 0
 
 
